@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: shopee-downloader
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
