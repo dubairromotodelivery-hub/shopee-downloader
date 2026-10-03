@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shopee Media Downloader Pro - Baixar Vídeos HD, Imagens e Descrição</title>
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+    <link rel="shortcut icon" href="/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#EE4D2D">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Shopee Pro">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode JS -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        shopee: {
+                            orange: '#EE4D2D',
+                            hover: '#d73211',
+                            dark: '#c4280a',
+                            light: '#ff6f43',
+                            bg: '#0F172A',
+                            card: 'rgba(30, 41, 59, 0.7)'
+                        }
+                    },
+                    boxShadow: {
+                        glow: '0 0 25px -5px rgba(238, 77, 45, 0.4)',
+                        'glow-lg': '0 0 35px -5px rgba(238, 77, 45, 0.6)'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-orange-500 selection:text-white relative overflow-x-hidden">
+
+    <!-- Background Glow Effects -->
+    <div class="fixed top-0 left-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div class="fixed bottom-10 right-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800/80 backdrop-blur-md sticky top-0 z-40 bg-slate-950/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-red-500 flex items-center justify-center shadow-glow">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight flex items-center gap-2">
+                        Shopee <span class="text-orange-500">Downloader</span>
+                        <span class="text-xs bg-orange-500/20 text-orange-400 font-medium px-2 py-0.5 rounded-full border border-orange-500/30">PRO v1.0</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Extração em Alta Definição de Vídeos, Fotos e Textos</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Botão Celular / Compartilhar -->
+                <button id="btnOpenMobileModal" class="flex items-center gap-1.5 text-xs sm:text-sm text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 px-3 py-1.5 rounded-lg transition-all shadow-sm group">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform"></i>
+                    <span>Celular & Amigos</span>
+                </button>
+
+                <!-- Botão Instalar PWA App (Desktop & Mobile) -->
+                <button id="btnInstallApp" class="hidden sm:flex items-center gap-1.5 text-xs sm:text-sm text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 px-3 py-1.5 rounded-lg transition-all shadow-sm">
+                    <i data-lucide="download" class="w-4 h-4 text-orange-400"></i>
+                    <span>Instalar App</span>
+                </button>
+
+                <!-- Histórico -->
+                <button id="btnOpenHistory" class="flex items-center gap-1.5 text-xs sm:text-sm text-slate-300 hover:text-white bg-slate-900 border border-slate-700/60 hover:border-slate-600 px-3 py-1.5 rounded-lg transition-all shadow-sm">
+                    <i data-lucide="history" class="w-4 h-4 text-orange-400"></i>
+                    <span class="hidden sm:inline">Histórico</span>
+                    <span id="historyBadge" class="hidden bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+        <!-- Hero Section & Input -->
+        <div class="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold uppercase tracking-wider mb-4 animate-fade-in">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                100% Gratuito & Ilimitado
+            </div>
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">
+                Baixe <span class="bg-gradient-to-r from-orange-400 via-orange-500 to-red-500 bg-clip-text text-transparent">Vídeos, Fotos e Descrição</span> da Shopee
+            </h2>
+            <p class="text-slate-400 text-sm sm:text-base">
+                Cole o link de qualquer produto (links normais ou encurtados <code class="text-orange-300 font-mono text-xs bg-slate-900 px-1 py-0.5 rounded">shp.ee</code> / <code class="text-orange-300 font-mono text-xs bg-slate-900 px-1 py-0.5 rounded">s.shopee.com.br</code>) para baixar as mídias originais sem perda de qualidade.
+            </p>
+        </div>
+
+        <!-- Input Box -->
+        <div class="max-w-3xl mx-auto mb-10">
+            <div class="glass-card p-2 sm:p-2.5 rounded-2xl border border-slate-700/60 shadow-2xl relative">
+                <form id="extractForm" class="flex flex-col sm:flex-row gap-2">
+                    <div class="relative flex-1 flex items-center">
+                        <i data-lucide="link" class="w-5 h-5 text-slate-400 absolute left-3.5 pointer-events-none"></i>
+                        <input 
+                            type="text" 
+                            id="urlInput" 
+                            placeholder="Cole o link do produto da Shopee aqui (ex: https://shopee.com.br/...)" 
+                            class="w-full bg-slate-900/90 text-slate-100 placeholder-slate-500 rounded-xl pl-11 pr-24 py-3.5 text-sm sm:text-base border border-slate-800 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                            required
+                            autocomplete="off"
+                        >
+                        <!-- Paste & Clear Buttons -->
+                        <div class="absolute right-2 flex items-center gap-1">
+                            <button type="button" id="btnClear" class="hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors" title="Limpar">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button" id="btnPaste" class="px-2.5 py-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/50 flex items-center gap-1" title="Colar link copiado">
+                                <i data-lucide="clipboard" class="w-3.5 h-3.5 text-orange-400"></i>
+                                <span>Colar</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button 
+                        type="submit" 
+                        id="btnSubmit" 
+                        class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-semibold px-6 py-3.5 rounded-xl transition-all shadow-glow hover:shadow-glow-lg flex items-center justify-center gap-2 group whitespace-nowrap active:scale-[0.98]"
+                    >
+                        <span id="btnText">Extrair Mídias</span>
+                        <i data-lucide="arrow-right" id="btnIcon" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"></i>
+                        <div id="btnSpinner" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Fast Link Examples -->
+            <div class="flex items-center justify-center gap-2 mt-3 text-xs text-slate-500">
+                <span>💡 Dica: Aceita links do aplicativo, afiliados e links diretos do computador.</span>
+            </div>
+        </div>
+
+        <!-- Progress Status (Hidden by default) -->
+        <div id="statusCard" class="hidden max-w-3xl mx-auto mb-8 p-4 rounded-xl glass-card border border-orange-500/30 text-center animate-fade-in">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <div class="w-5 h-5 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin"></div>
+                <span id="statusText" class="text-sm font-medium text-slate-200">Acessando produto na Shopee...</span>
+            </div>
+            <p class="text-xs text-slate-400">Processando informações, fotos em resolução máxima e fluxo de vídeo.</p>
+        </div>
+
+        <!-- Error Card (Hidden by default) -->
+        <div id="errorCard" class="hidden max-w-3xl mx-auto mb-8 p-4 rounded-xl bg-red-950/40 border border-red-800/60 text-red-200 flex items-start gap-3 animate-fade-in">
+            <i data-lucide="alert-circle" class="w-5 h-5 text-red-400 shrink-0 mt-0.5"></i>
+            <div class="flex-1">
+                <h4 class="font-semibold text-sm text-red-300">Falha ao processar</h4>
+                <p id="errorMessage" class="text-xs text-red-400 mt-0.5">Não foi possível carregar as informações do produto.</p>
+            </div>
+            <button id="btnCloseError" class="text-red-400 hover:text-white p-1">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Product Output Showcase (Hidden by default) -->
+        <div id="productShowcase" class="hidden space-y-6 animate-slide-up">
+
+            <!-- Product Header Summary Card -->
+            <div class="glass-card rounded-2xl border border-slate-800 p-5 sm:p-6 shadow-xl">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- Thumbnail -->
+                    <div class="w-full md:w-56 h-56 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shrink-0 relative group">
+                        <img id="productCover" src="" alt="Capa do Produto" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div id="videoBadge" class="hidden absolute top-2 right-2 bg-red-600/90 backdrop-blur-md text-white text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-md">
+                            <i data-lucide="play" class="w-3 h-3 fill-current"></i> VÍDEO HD
+                        </div>
+                    </div>
+
+                    <!-- Meta Details -->
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <!-- Badges -->
+                            <div class="flex flex-wrap items-center gap-2 mb-2.5">
+                                <span id="priceBadge" class="text-xl sm:text-2xl font-black text-orange-400">R$ 0,00</span>
+                                <div id="ratingBox" class="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md text-xs font-semibold">
+                                    <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
+                                    <span id="ratingVal">5.0</span>
+                                </div>
+                                <span id="salesBadge" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700/50">
+                                    0 vendidos
+                                </span>
+                            </div>
+
+                            <!-- Product Title -->
+                            <h3 id="productTitle" class="text-lg sm:text-xl font-bold text-slate-100 line-clamp-2 mb-3 leading-snug">
+                                Título do Produto
+                            </h3>
+
+                            <!-- Media Stats summary -->
+                            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 mb-4">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="image" class="w-4 h-4 text-orange-400"></i>
+                                    <span id="statImages">0 Fotos encontradas</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="video" class="w-4 h-4 text-red-400"></i>
+                                    <span id="statVideo">Sem vídeo</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i>
+                                    <span id="statDesc">Descrição pronta</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 BOTÕES PRINCIPAIS DE DOWNLOAD SOLICITADOS -->
+                        <div class="pt-4 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <!-- 1. Baixar Vídeo (Sem Marca d'Água) -->
+                            <button id="btnDownloadVideo" class="flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all text-sm group disabled:opacity-40 disabled:cursor-not-allowed">
+                                <i data-lucide="video" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
+                                <span>Baixar Vídeo (Sem Marca d'Água)</span>
+                            </button>
+
+                            <!-- 2. Baixar Imagens -->
+                            <button id="btnDownloadImages" class="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all text-sm group">
+                                <i data-lucide="images" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
+                                <span>Baixar Imagens</span>
+                            </button>
+
+                            <!-- 3. Baixar Descrição -->
+                            <button id="btnDownloadDescriptionTxt" class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-semibold py-3 px-4 rounded-xl shadow-md transition-all text-sm group">
+                                <i data-lucide="file-text" class="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform"></i>
+                                <span>Baixar Descrição (.txt)</span>
+                            </button>
+
+                            <!-- 4. Baixar Tudo -->
+                            <button id="btnDownloadAll" class="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition-all text-sm group">
+                                <i data-lucide="download-cloud" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
+                                <span>Baixar Tudo</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Explorer Tabs -->
+            <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <!-- Navigation Tabs -->
+                <div class="flex border-b border-slate-800 bg-slate-900/50 overflow-x-auto scrollbar-none">
+                    <button class="tab-btn active px-6 py-3.5 text-sm font-semibold flex items-center gap-2 border-b-2 border-orange-500 text-orange-400 transition-colors" data-target="tabImages">
+                        <i data-lucide="images" class="w-4 h-4"></i>
+                        <span>Galeria de Imagens</span>
+                        <span id="tabCountImages" class="text-xs bg-orange-500/20 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3.5 text-sm font-semibold flex items-center gap-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors" data-target="tabVideo">
+                        <i data-lucide="film" class="w-4 h-4"></i>
+                        <span>Vídeo do Produto</span>
+                        <span id="tabBadgeVideo" class="text-xs bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button class="tab-btn px-6 py-3.5 text-sm font-semibold flex items-center gap-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors" data-target="tabDescription">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>Descrição & Ficha Técnica</span>
+                    </button>
+                </div>
+
+                <!-- Tab Panels Container -->
+                <div class="p-5 sm:p-6">
+                    <!-- Tab 1: Image Gallery -->
+                    <div id="tabImages" class="tab-panel">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                            <div>
+                                <h4 class="font-bold text-base text-slate-200">Imagens em Resolução Original</h4>
+                                <p class="text-xs text-slate-400">Fotos do anúncio principal e variações/modelos de alta definição.</p>
+                            </div>
+                            <button id="btnQuickImages" class="self-start sm:self-auto text-xs bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 font-medium px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                Baixar Todas as Fotos
+                            </button>
+                        </div>
+
+                        <!-- Gallery Grid -->
+                        <div id="imageGalleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                            <!-- Cards inserted via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Video Player -->
+                    <div id="tabVideo" class="tab-panel hidden">
+                        <div id="videoContainer" class="max-w-2xl mx-auto text-center">
+                            <!-- Video Player inserted via JS -->
+                        </div>
+                        <div id="noVideoMsg" class="hidden text-center py-12">
+                            <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto mb-3 text-slate-500">
+                                <i data-lucide="video-off" class="w-8 h-8"></i>
+                            </div>
+                            <h4 class="font-bold text-slate-300">Nenhum vídeo anexado</h4>
+                            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">Este anúncio da Shopee não possui vídeo anexado pelo vendedor.</p>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Description & Technical Specs -->
+                    <div id="tabDescription" class="tab-panel hidden space-y-6">
+                        <!-- Top actions -->
+                        <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                            <h4 class="font-bold text-base text-slate-200">Texto e Especificações</h4>
+                            <div class="flex items-center gap-2">
+                                <button id="btnCopyDesc" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5 text-blue-400"></i>
+                                    <span id="btnCopyText">Copiar Texto</span>
+                                </button>
+                                <button id="btnDownloadDescTxtTab" class="text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                    Baixar TXT
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Technical Attributes Grid (if any) -->
+                        <div id="attributesSection" class="hidden">
+                            <h5 class="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                                <i data-lucide="list" class="w-3.5 h-3.5"></i> Ficha Técnica / Atributos
+                            </h5>
+                            <div id="attributesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                                <!-- Attributes injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Description Box -->
+                        <div>
+                            <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                                <i data-lucide="align-left" class="w-3.5 h-3.5"></i> Descrição Completa
+                            </h5>
+                            <div class="bg-slate-900/90 rounded-xl p-4 sm:p-5 border border-slate-800 text-sm leading-relaxed text-slate-300 font-mono whitespace-pre-wrap selection:bg-orange-500 selection:text-white max-h-96 overflow-y-auto" id="descriptionText">
+                                Sem descrição disponível.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Mobile & QR Code Connect Modal -->
+        <div id="mobileModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="glass-card rounded-2xl border border-slate-800 max-w-md w-full p-6 shadow-2xl animate-scale-in text-center relative max-h-[92vh] overflow-y-auto">
+                <button id="btnCloseMobileModal" class="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+
+                <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mx-auto mb-3 text-orange-400">
+                    <i data-lucide="smartphone" class="w-6 h-6"></i>
+                </div>
+                <h3 class="font-bold text-lg text-slate-100">Acessar no Celular (4G, 5G & Wi-Fi)</h3>
+                <p class="text-xs text-slate-400 mt-1 mb-4">
+                    Abra o app no seu smartphone em qualquer lugar ou compartilhe com amigos:
+                </p>
+
+                <!-- Tipo de Conexão: 4G/5G vs Wi-Fi Local -->
+                <div class="flex p-1 bg-slate-900 rounded-xl border border-slate-800 mb-4 text-xs font-semibold">
+                    <button id="tab4g" class="flex-1 py-2 rounded-lg bg-orange-500 text-white shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                        <span>4G / 5G / Qualquer Lugar</span>
+                    </button>
+                    <button id="tabWifi" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5 transition-all">
+                        <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+                        <span>Mesmo Wi-Fi</span>
+                    </button>
+                </div>
+
+                <!-- QR Code Box -->
+                <div class="bg-white p-3 rounded-2xl inline-block shadow-lg mx-auto mb-4" id="qrcodeContainer">
+                    <!-- QR Code renderizado via JS -->
+                </div>
+
+                <!-- Link direto -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2 text-left mb-4">
+                    <div class="min-w-0 flex-1">
+                        <span id="mobileUrlLabel" class="text-[10px] uppercase font-bold text-orange-400 flex items-center gap-1">
+                            <i data-lucide="shield-check" class="w-3 h-3"></i> Link Seguro HTTPS (4G/5G)
+                        </span>
+                        <span id="mobileNetworkUrl" class="text-xs font-mono font-semibold text-slate-200 truncate block mt-0.5">Gerando link...</span>
+                    </div>
+                    <button id="btnCopyNetworkUrl" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-medium shrink-0 transition-colors shadow-sm">
+                        Copiar
+                    </button>
+                </div>
+
+                <div class="text-left bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 text-xs text-slate-400 space-y-1.5">
+                    <p class="font-semibold text-slate-200">📱 Como instalar como App no Celular:</p>
+                    <p>• <b>Android (Chrome)</b>: Abra o link, clique nos 3 pontinhos e escolha <b>"Instalar aplicativo"</b> ou <b>"Adicionar à tela inicial"</b>.</p>
+                    <p>• <b>iPhone (Safari)</b>: Abra o link, clique no botão Compartilhar e escolha <b>"Adicionar à Tela de Início"</b>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Modal / Drawer -->
+        <div id="historyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="glass-card rounded-2xl border border-slate-800 max-w-xl w-full max-h-[80vh] flex flex-col shadow-2xl animate-scale-in overflow-hidden">
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="history" class="w-5 h-5 text-orange-400"></i>
+                        <h3 class="font-bold text-base text-slate-100">Histórico de Extrações</h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btnClearHistory" class="text-xs text-red-400 hover:text-red-300 hover:underline">Limpar tudo</button>
+                        <button id="btnCloseHistory" class="p-1 text-slate-400 hover:text-white">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="historyList" class="p-4 overflow-y-auto divide-y divide-slate-800/60 space-y-2 flex-1">
+                    <!-- History items -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Lightbox Modal -->
+        <div id="lightboxModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+            <button id="btnCloseLightbox" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white bg-slate-900/60 hover:bg-slate-800 rounded-full border border-white/10 transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div class="max-w-4xl max-h-[85vh] flex flex-col items-center">
+                <img id="lightboxImg" src="" alt="Zoom" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl mb-4">
+                <a id="lightboxDownloadBtn" href="#" class="bg-orange-500 hover:bg-orange-600 text-white font-medium text-xs px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                    <i data-lucide="download" class="w-4 h-4"></i> Baixar Imagem Original
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
+        <p>Shopee Media Downloader Pro • Ferramenta para criadores, lojistas e dropshipping</p>
+    </footer>
+
+    <!-- App Scripts -->
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
